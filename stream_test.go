@@ -48,3 +48,45 @@ func Test_Group(t *testing.T) {
         }))
     fmt.Println(users)
 }
+
+func BenchmarkRawToArray(b *testing.B) {
+    arr := []*User{{name: "2222"}, {name: "2222"}, {name: "12"}, {name: "1235"}}
+    for i := 0; i < b.N; i++ {
+        var output []string
+        for _, user := range arr {
+            if user.name != "2222" {
+                output = append(output, user.name)
+            }
+        }
+    }
+}
+
+func BenchmarkToArray(b *testing.B) {
+    arr := []*User{{name: "2222"}, {name: "2222"}, {name: "12"}, {name: "1235"}}
+    for i := 0; i < b.N; i++ {
+        var output []string
+        FromArray(arr).
+            Filter(func(e interface{}) bool {
+                return e.(*User).name != "2222"
+            }).
+            Map(func(e interface{}) interface{} {
+                return e.(*User).name
+            }).
+            Collect(ToArray(&output))
+    }
+}
+
+func BenchmarkToMapAndChangeValue(b *testing.B) {
+    arr := []*User{{name: "2222"}, {name: "2222"}, {name: "12"}, {name: "1235"}}
+    for i := 0; i < b.N; i++ {
+        var users map[string][]*User
+        FromArray(arr).
+            Filter(func(e interface{}) bool {
+                return e.(*User).name != "2222"
+            }).
+            Collect(Group(&users, func(i interface{}) interface{} {
+                return (i.(*User)).name
+            }))
+        //fmt.Println(users)
+    }
+}
