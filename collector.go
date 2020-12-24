@@ -52,11 +52,12 @@ type MapFunction func(interface{}) interface{}
 
 type mapCollector struct {
     output                interface{}
-    assignableOutputValue reflect.Value
-    outputValue           reflect.Value
     keySupplier           MapFunction
     // allow nil, use element itself if the value supplier is nil
     valueSupplier MapFunction
+
+    assignableOutputValue reflect.Value
+    outputValue           reflect.Value
 }
 
 func (th *mapCollector) begin(size int) {
@@ -99,20 +100,31 @@ type GroupFunction func(interface{}) interface{}
 
 type groupCollector struct {
     output                interface{}
-    assignableOutputValue reflect.Value
-    outputValue           reflect.Value
-    // type of map value
-    sliceType             reflect.Type
+    // for get key
     keySupplier           GroupFunction
     // allow nil, use element itself if the value supplier is nil
     valueSupplier GroupFunction
+
+
+    assignableOutputValue *reflect.Value
+    outputValue           *reflect.Value
+    // type of map value
+    sliceType             *reflect.Type
+
+}
+
+func newGroupCollector(output interface{}, keySupplier GroupFunction, valueSupplier GroupFunction) *groupCollector {
+    return &groupCollector{output: output, keySupplier: keySupplier, valueSupplier: valueSupplier}
 }
 
 func (th *groupCollector) begin(size int) {
     mapType, assignableOutputValue := parseMap(th.output)
-    th.assignableOutputValue = assignableOutputValue
-    th.outputValue = reflect.MakeMap(mapType)
-    th.sliceType = mapType.Elem()
+    elementType := mapType.Elem()
+    mapValue := reflect.MakeMap(mapType)
+
+    th.assignableOutputValue = &assignableOutputValue
+    th.outputValue = &mapValue
+    th.sliceType = &elementType
 }
 
 func (th *groupCollector) accept(element interface{}) {
@@ -134,7 +146,7 @@ func (th *groupCollector) accept(element interface{}) {
     // reset list value in map
     sliceValue := th.outputValue.MapIndex(keyValue)
     if sliceValue.Kind() == reflect.Invalid {
-       sliceValue = reflect.MakeSlice(th.sliceType, 0, 0)
+       sliceValue = reflect.MakeSlice(*th.sliceType, 0, 0)
     }
     sliceValue = reflect.Append(sliceValue, valueValue)
 
@@ -142,7 +154,7 @@ func (th *groupCollector) accept(element interface{}) {
 }
 
 func (th *groupCollector) end() {
-    th.assignableOutputValue.Set(th.outputValue)
+    th.assignableOutputValue.Set(*th.outputValue)
 }
 
 func extractCanSet(value reflect.Value) reflect.Value {
