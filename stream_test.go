@@ -2,7 +2,6 @@ package jstream
 
 import (
     "fmt"
-    "github.com/jucardi/go-streams/streams"
     "testing"
 )
 
@@ -87,38 +86,39 @@ func BenchmarkToArray(b *testing.B) {
         }
     })
 
-    b.Run("go-streams", func(b *testing.B) {
-        for i := 0; i < b.N; i++ {
-            _ = streams.
-                // Creates a stream from the given array
-                FromArray(arr).
-                Filter(func(e interface{}) bool {
-                return e.(*User).name != "2222"
-            }).Map(func(e interface{}) interface{} {
-                return e.(*User).name
-            }).ToArray().([]string)
-
-                //// Adds a filter for strings that start with 'p'
-                //Filter(func(e interface{}) bool {
-                //    return e.(*User).name != "2222"
-                //}).
-                //// Converts back to an array
-                //ToArray().([]string)
-        }
-    })
-
+    //b.Run("stream", func(b *testing.B) {
+    //    for i := 0; i < b.N; i++ {
+    //
+    //         _ = stream.OfSlice(arr).
+    //            Filter(func(e types.T) bool {
+    //                return e.(*User).name != "2222"
+    //            }).
+    //            Map(func(e types.T) types.R {
+    //                return e.(*User).name
+    //            }).
+    //            ToSliceOf(reflect.TypeOf(""))
+    //
+    //            //// Adds a filter for strings that start with 'p'
+    //            //Filter(func(e interface{}) bool {
+    //            //    return e.(*User).name != "2222"
+    //            //}).
+    //            //// Converts back to an array
+    //            //ToArray().([]string)
+    //    }
+    //})
+    //
     b.Run("jstream", func(b *testing.B) {
-        for i := 0; i < b.N; i++ {
-            var output []string
-            FromArray(arr).
-                Filter(func(e interface{}) bool {
-                return e.(*User).name != "2222"
-                }).
-                Map(func(e interface{}) interface{} {
-                return e.(*User).name
-                }).
-                Collect(ToArray(&output))
-        }
+       for i := 0; i < b.N; i++ {
+           var output []string
+           FromArray(arr).
+               Filter(func(e interface{}) bool {
+               return e.(*User).name != "2222"
+               }).
+               Map(func(e interface{}) interface{} {
+               return e.(*User).name
+               }).
+               Collect(ToArray(&output))
+       }
     })
 }
 
