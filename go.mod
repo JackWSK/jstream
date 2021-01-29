@@ -1,6 +1,6 @@
-module code.aliyun.com/jgo/jstream
+module github.com/JackWSK/jstream
 
-go 1.15
+go 1.14
 
 require (
 
