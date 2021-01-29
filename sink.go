@@ -1,5 +1,7 @@
 package jstream
 
+import "sync"
+
 type sink interface {
     //  start iterate
     // - size: size of elements for initial collection
@@ -60,5 +62,20 @@ func (th *mapSink) accept(element interface{}) {
     if th.f != nil {
         mapped := th.f(element)
         th.send(mapped)
+    }
+}
+
+/// distinct elements
+
+type distinctSink struct {
+    baseSink
+    // record the element whether exists before
+    set sync.Map
+}
+
+func (th *distinctSink) accept(element interface{}) {
+    // pass if not occur in set
+    if _, loaded := th.set.LoadOrStore(element, true); !loaded {
+        th.send(element)
     }
 }
